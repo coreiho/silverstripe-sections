@@ -38,7 +38,7 @@ class ImageBannerSection extends Section
         if ($this->Links()->Count() > 0) {
             $linksGridConfig->addComponent(new GridFieldOrderableRows());
         }
-        
+
         $fields = parent::getCMSFields();
         $fields->addFieldsToTab(
             "Root.Main",
