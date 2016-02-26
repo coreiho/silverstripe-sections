@@ -11,7 +11,7 @@ class FormSection extends Section
 
     private static $description = "Displays userform from a specified page";
 
-    private static $minimum_per_page = 1;
+    private static $minimum_per_page = 0;
 
     /**
      * Database fields
