@@ -4,8 +4,7 @@
  *
  * @package silverstripe-sections
  */
-class SectionPageExtension extends DataExtension
-{
+class SectionPageExtension extends DataExtension {
     /**
      * Has_one relationship
      * @var array
@@ -19,7 +18,8 @@ class SectionPageExtension extends DataExtension
      * @var array
      */
     private static $many_many = array(
-        'Sections' => 'Section'
+        'Sections' => 'Section',
+        'SectionSubmissions' => 'SectionSubmission'
     );
 
     private static $many_many_extraFields = array(
@@ -32,8 +32,7 @@ class SectionPageExtension extends DataExtension
      * CMS Fields
      * @return FieldList
      */
-    public function updateCMSFields(FieldList $fields)
-    {
+    public function updateCMSFields(FieldList $fields) {
         if (!Permission::check("VIEW_SECTIONS")) {
             return $fields;
         }
@@ -100,8 +99,7 @@ class SectionPageExtension extends DataExtension
         return $fields;
     }
 
-    public function onAfterWrite()
-    {
+    public function onAfterWrite() {
         parent::onAfterWrite();
 
         $AvailableTypes = $this->AvailableSectionTypes();
@@ -144,8 +142,7 @@ class SectionPageExtension extends DataExtension
      * Lists all sections types and their settings relative to the current page type.
      * @return array
      */
-    public function AvailableSectionTypes()
-    {
+    public function AvailableSectionTypes() {
         $AvailableTypes = ClassInfo::subclassesfor('Section');
         unset($AvailableTypes['Section']);
 
@@ -193,8 +190,73 @@ class SectionPageExtension extends DataExtension
      * Returns page link.  Used for link section so template does have to check for 2 variables
      * @return string
      */
-    public function LinkURL()
-    {
+    public function LinkURL() {
         return $this->owner->Link();
     }
+}
+
+class SectionsPage_Controller extends DataExtension {
+    private static $allowed_actions = array (
+		'SectionForm'
+	);
+
+	// Contact Form
+	public function SectionForm(){
+		$form = new Form(
+			$this->owner,
+			'SectionForm',
+			new FieldList(
+				TextField::create('Name', 'Name')->setAttribute('required data-parsley-error-message', 'Please enter your name.'),
+				EmailField::create('Email', 'Email address')->setAttribute('required data-parsley-error-message', 'Please enter your email address.'),
+				TextField::create('Phone', 'Phone number'),
+                TextareaField::create('Message', 'Enquiry')->setRows(8)->setAttribute('required data-parsley-error-message', 'Please enter your enquiry.')
+			),
+			new FieldList(
+	            FormAction::create("doSendSectionForm")->setTitle("Send Enquiry")
+	        ),
+			new RequiredFields(array(
+    			'Name', 'Email', 'Message'
+			))
+		);
+
+		$form->setAttribute('data-parsley-validate', true);
+		$form->setFormMethod('POST', true);
+
+        $this->owner->extend('UpdateSectionForm', $form);
+
+		return $form;
+	}
+
+	// Send the Enquiry
+	public function doSendSectionForm($data, $form){
+        $config = SiteConfig::current_site_config();
+        $section = $this->owner->Sections()->filter(array('ClassName' => 'FormSection'))->first();
+
+		// Create the new contact submission
+		$SectionSubmission = new SectionSubmission();
+		$form->saveInto($SectionSubmission);
+        $SectionSubmission->PageID = $this->owner->ID;
+		$SectionSubmission->write();
+
+		// Send email confirmation
+		$emailTo = $section->EmailTo ? $section->EmailTo : 'web@platocreative.co.nz';
+		$emailFrom = $section->EmailFrom ? $section->EmailFrom : 'noreply@' . Director::baseURL();
+		$subject = $config->Title . ' - Online Enquiry';
+        $message = "<h3>Online Enquiry</h3>";
+        $message .= "<p>Name:<br />" . $data['Name'] . "</p>";
+        $message .= "<p>Email:<br />" . $data['Email'] . "</p>";
+        $message .= "<p>Phone:<br />" . $data['Phone'] . "</p>";
+        $message .= "<p>Message:<br />" . $data['Message'] . "</p>";
+
+        $this->owner->extend('UpdateSendSectionForm', $emailTo, $emailFrom, $subject, $message);
+
+		$email = new Email($emailFrom, $emailTo, $subject, $message);
+		$email->send();
+
+		// Add success message
+		$successMessage = $section->SuccessMessage ? $section->SuccessMessage : "Thank you for your enquiry. A member of our team will get back to you as soon as possible.";
+		$form->sessionMessage($successMessage, 'good');
+
+        return $this->owner->redirectBack();
+	}
 }

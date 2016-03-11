@@ -7,6 +7,9 @@ After:
 Page:
   extensions:
     - SectionPageExtension
+Page_Controller:
+  extensions:
+    - SectionsPage_Controller
 Injector:
   GridField:
     class: RowExtraClassesGridField
