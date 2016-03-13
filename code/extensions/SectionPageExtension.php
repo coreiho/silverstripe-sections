@@ -187,7 +187,7 @@ class SectionPageExtension extends DataExtension {
     }
 
     /**
-     * Returns page link.  Used for link section so template does have to check for 2 variables
+     * Used for link section so template does have to check for 2 variables
      * @return string
      */
     public function LinkURL() {

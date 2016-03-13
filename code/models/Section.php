@@ -50,6 +50,11 @@ class Section extends DataObject implements PermissionProvider
     );
 
     /**
+     * @var SectionController
+     */
+    protected $controller;
+
+    /**
      * CMS Fields
      * @return FieldList
      */
@@ -219,6 +224,11 @@ class Section extends DataObject implements PermissionProvider
 
     }
 
+    /**
+     * Applies anchor to section in template.
+     *
+     * @return string $classes
+     */
     public function Anchor(){
         if ($this->MenuTitle && $this->ShowInMenus) {
             return strtolower(str_replace(' ','',$this->MenuTitle));
@@ -226,6 +236,11 @@ class Section extends DataObject implements PermissionProvider
         return false;
     }
 
+    /**
+     * Applies anchor to section in template.
+     *
+     * @return string $classes
+     */
     public function AnchorAttr(){
         if ($this->Anchor()) {
             return ' id="'.$this->Anchor().'"';
@@ -233,6 +248,11 @@ class Section extends DataObject implements PermissionProvider
         return false;
     }
 
+    /**
+     * Applies classes to section in template.
+     *
+     * @return string $classes
+     */
     public function Classes(){
         $classes = array('section');
         if ($this->Style) {
@@ -243,6 +263,11 @@ class Section extends DataObject implements PermissionProvider
         return implode(' ',$classes);
     }
 
+    /**
+     * Applies classes to section in template.
+     *
+     * @return string $classes
+     */
     public function ClassAttr(){
         return 'class="'.$this->Classes().'"';
     }
@@ -266,10 +291,19 @@ class Section extends DataObject implements PermissionProvider
         $member = Member::currentUser();
         $access = Permission::checkMember($member, 'CMS_ACCESS');
         if($this->Public || $access){
-            $this->CurrentPage = Director::get_current_page();
-            $this->CurrentPageController = Controller::curr();
-            
-            return $this->renderWith($this->Render());
+            foreach (array_reverse(ClassInfo::ancestry($this->class)) as $sectionClass) {
+                $controllerClass = "{$sectionClass}_Controller";
+                if (class_exists($controllerClass)) {
+                    break;
+                }
+            }
+            if (!class_exists($controllerClass)) {
+                throw new Exception("Could not find controller class for $this->classname");
+            }
+            $data = array();
+            $data['CurrentPage'] = Controller::curr();
+            $data['Controller'] = Injector::inst()->create($controllerClass, $this);
+            return $this->customise(new arrayData($data))->renderWith($this->Render());
         }
     }
 
@@ -278,6 +312,5 @@ class Section extends DataObject implements PermissionProvider
             return array('preset');
         }
         return array();
-
     }
 }
