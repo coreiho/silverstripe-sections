@@ -309,7 +309,9 @@ class Section extends DataObject implements PermissionProvider
         if (!class_exists($controllerClass)) {
             throw new Exception("Could not find controller class for $this->classname");
         }
+
         $this->controller = Injector::inst()->create($controllerClass, $this);
+
         return $this->controller;
     }
 
