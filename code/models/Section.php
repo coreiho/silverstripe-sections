@@ -291,20 +291,26 @@ class Section extends DataObject implements PermissionProvider
         $member = Member::currentUser();
         $access = Permission::checkMember($member, 'CMS_ACCESS');
         if($this->Public || $access){
-            foreach (array_reverse(ClassInfo::ancestry($this->class)) as $sectionClass) {
-                $controllerClass = "{$sectionClass}_Controller";
-                if (class_exists($controllerClass)) {
-                    break;
-                }
-            }
-            if (!class_exists($controllerClass)) {
-                throw new Exception("Could not find controller class for $this->classname");
-            }
-            $data = array();
-            $data['CurrentPage'] = Controller::curr();
-            $data['Controller'] = Injector::inst()->create($controllerClass, $this);
-            return $this->customise(new arrayData($data))->renderWith($this->Render());
+            $this->CurrentPage = Controller::curr();
+            return $this->renderWith($this->Render());
         }
+    }
+
+    public function getController(){
+        if ($this->controller) {
+            return $this->controller;
+        }
+        foreach (array_reverse(ClassInfo::ancestry($this->class)) as $sectionClass) {
+            $controllerClass = "{$sectionClass}_Controller";
+            if (class_exists($controllerClass)) {
+                break;
+            }
+        }
+        if (!class_exists($controllerClass)) {
+            throw new Exception("Could not find controller class for $this->classname");
+        }
+        $this->controller = Injector::inst()->create($controllerClass, $this);
+        return $this->controller;
     }
 
     public function GridFieldRowClasses(){
@@ -312,5 +318,9 @@ class Section extends DataObject implements PermissionProvider
             return array('preset');
         }
         return array();
+    }
+
+    public function Link(){
+        return Controller::curr()->Link();
     }
 }

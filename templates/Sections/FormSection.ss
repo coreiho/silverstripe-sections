@@ -12,9 +12,9 @@
 		</div>
 	<% end_if %>
 
-	<% if CurrentPageController.SectionForm %>
+	<% if Controller.SectionForm %>
 		<div class="form">
-			$CurrentPageController.SectionForm
+			$Controller.SectionForm
 		</div>
 	<% end_if %>
 </section>

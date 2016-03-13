@@ -56,3 +56,73 @@ class FormSection extends Section {
         return $fields;
     }
 }
+
+class FormSection_Controller extends ContentController {
+    private static $allowed_actions = array (
+		'SectionForm'
+	);
+
+    public function init() {
+        parent::init();
+    }
+
+	// Contact Form
+	public function SectionForm(){
+		$form = new Form(
+			$this,
+			'SectionForm',
+			new FieldList(
+				TextField::create('Name', 'Name')->setAttribute('required data-parsley-error-message', 'Please enter your name.'),
+				EmailField::create('Email', 'Email address')->setAttribute('required data-parsley-error-message', 'Please enter your email address.'),
+				TextField::create('Phone', 'Phone number'),
+                TextareaField::create('Message', 'Enquiry')->setRows(8)->setAttribute('required data-parsley-error-message', 'Please enter your enquiry.')
+			),
+			new FieldList(
+	            FormAction::create("doSendSectionForm")->setTitle("Send Enquiry")
+	        ),
+			new RequiredFields(array(
+    			'Name', 'Email', 'Message'
+			))
+		);
+
+		$form->setAttribute('data-parsley-validate', true);
+		$form->setFormMethod('POST', true);
+
+        $this->extend('UpdateSectionForm', $form);
+
+		return $form;
+	}
+
+	// Send the Enquiry
+	public function doSendSectionForm($data, $form){
+        $config = SiteConfig::current_site_config();
+        $section = $this->owner->Sections()->filter(array('ClassName' => 'FormSection'))->first();
+
+		// Create the new contact submission
+		$SectionSubmission = new SectionSubmission();
+		$form->saveInto($SectionSubmission);
+        $SectionSubmission->PageID = $this->owner->ID;
+		$SectionSubmission->write();
+
+		// Send email confirmation
+		$emailTo = $section->EmailTo ? $section->EmailTo : 'web@platocreative.co.nz';
+		$emailFrom = $section->EmailFrom ? $section->EmailFrom : 'noreply@' . Director::baseURL();
+		$subject = $config->Title . ' - Online Enquiry';
+        $message = "<h3>Online Enquiry</h3>";
+        $message .= "<p>Name:<br />" . $data['Name'] . "</p>";
+        $message .= "<p>Email:<br />" . $data['Email'] . "</p>";
+        $message .= "<p>Phone:<br />" . $data['Phone'] . "</p>";
+        $message .= "<p>Message:<br />" . $data['Message'] . "</p>";
+
+        $this->extend('UpdateSendSectionForm', $emailTo, $emailFrom, $subject, $message);
+
+		$email = new Email($emailFrom, $emailTo, $subject, $message);
+		$email->send();
+
+		// Add success message
+		$successMessage = $section->SuccessMessage ? $section->SuccessMessage : "Thank you for your enquiry. A member of our team will get back to you as soon as possible.";
+		$form->sessionMessage($successMessage, 'good');
+die(Controller::curr());
+        return Controller::curr()->redirectBack();
+	}
+}
