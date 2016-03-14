@@ -15,7 +15,8 @@ class SectionSubmission extends DataObject {
 		'Name' => 'Name',
         'Email' => 'Email',
         'Phone' => 'Phone',
-        'Page.Title' => 'Page'
+        'Page.Title' => 'Page',
+		'Created.Nice' => 'Received'
 	);
 
 	static $default_sort = "ID DESC";

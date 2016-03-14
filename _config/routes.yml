@@ -1,7 +1,0 @@
----
-Name: mysiteroutes
-After: framework/routes#coreroutes
----
-Director:
-  rules:
-   'SectionForm': 'FormSection_Controller'

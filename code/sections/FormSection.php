@@ -37,6 +37,7 @@ class FormSection extends Section {
      */
     public function getCMSFields(){
         $fields = parent::getCMSFields();
+
         $fields->addFieldsToTab(
             "Root.Main",
             array(
@@ -44,6 +45,9 @@ class FormSection extends Section {
                 HtmlEditorField::create('Content', 'Content')
             )
         );
+
+        // Form Settings
+        $fields->insertBefore('Settings', Tab::create('FormInfo'));
         $fields->addFieldsToTab(
             "Root.FormInfo",
             array(
@@ -53,21 +57,20 @@ class FormSection extends Section {
                 TextareaField::create('SuccessMessage', 'Success message')->setAttribute('placeholder', 'Thank you for your enquiry...')
             )
         );
+        
         return $fields;
     }
 }
 
-class FormSection_Controller extends ContentController {
+class FormSection_Controller extends Section_Controller {
     private static $allowed_actions = array (
 		'SectionForm'
 	);
 
-    public function init() {
-        parent::init();
-    }
-
 	// Contact Form
 	public function SectionForm(){
+        $section = $this->getSection();
+
 		$form = new Form(
 			$this,
 			'SectionForm',
@@ -96,12 +99,12 @@ class FormSection_Controller extends ContentController {
 	// Send the Enquiry
 	public function doSendSectionForm($data, $form){
         $config = SiteConfig::current_site_config();
-        $section = $this->owner->Sections()->filter(array('ClassName' => 'FormSection'))->first();
+        $section = $this->getSection();
 
 		// Create the new contact submission
 		$SectionSubmission = new SectionSubmission();
 		$form->saveInto($SectionSubmission);
-        $SectionSubmission->PageID = $this->owner->ID;
+        $SectionSubmission->PageID = $this->getPage()->ID;
 		$SectionSubmission->write();
 
 		// Send email confirmation
@@ -122,7 +125,7 @@ class FormSection_Controller extends ContentController {
 		// Add success message
 		$successMessage = $section->SuccessMessage ? $section->SuccessMessage : "Thank you for your enquiry. A member of our team will get back to you as soon as possible.";
 		$form->sessionMessage($successMessage, 'good');
-die(Controller::curr());
+
         return Controller::curr()->redirectBack();
 	}
 }
