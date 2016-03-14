@@ -4,8 +4,7 @@
  *
  * @package silverstripe-sections
  */
-class SectionPageExtension extends DataExtension
-{
+class SectionPageExtension extends DataExtension {
     /**
      * Has_one relationship
      * @var array
@@ -19,7 +18,8 @@ class SectionPageExtension extends DataExtension
      * @var array
      */
     private static $many_many = array(
-        'Sections' => 'Section'
+        'Sections' => 'Section',
+        'SectionSubmissions' => 'SectionSubmission'
     );
 
     private static $many_many_extraFields = array(
@@ -32,8 +32,7 @@ class SectionPageExtension extends DataExtension
      * CMS Fields
      * @return FieldList
      */
-    public function updateCMSFields(FieldList $fields)
-    {
+    public function updateCMSFields(FieldList $fields) {
         if (!Permission::check("VIEW_SECTIONS")) {
             return $fields;
         }
@@ -100,8 +99,7 @@ class SectionPageExtension extends DataExtension
         return $fields;
     }
 
-    public function onAfterWrite()
-    {
+    public function onAfterWrite() {
         parent::onAfterWrite();
 
         $AvailableTypes = $this->AvailableSectionTypes();
@@ -144,8 +142,7 @@ class SectionPageExtension extends DataExtension
      * Lists all sections types and their settings relative to the current page type.
      * @return array
      */
-    public function AvailableSectionTypes()
-    {
+    public function AvailableSectionTypes() {
         $AvailableTypes = ClassInfo::subclassesfor('Section');
         unset($AvailableTypes['Section']);
 
@@ -193,8 +190,7 @@ class SectionPageExtension extends DataExtension
      * Used for link section so template does have to check for 2 variables
      * @return string
      */
-    public function LinkURL()
-    {
+    public function LinkURL() {
         return $this->owner->Link();
     }
 }

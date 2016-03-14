@@ -7,19 +7,6 @@ class Section_Controller extends Controller
      */
     protected $section;
 
-    /*
-     * @param Section $section
-     */
-     public function __contruct($section = null)
-     {
-         if ($section) {
-             $this->section = $section;
-             $this->failover = $section;
-         }
-
-         parent::__contruct();
-     }
-
      public function index()
      {
          return;
@@ -34,7 +21,8 @@ class Section_Controller extends Controller
     {
         $id = ($this->section) ? $this->section->ID : null;
         $segment = Controller::join_links('section', $id, $action);
-        if ($page = Director::get_current_page()) {
+
+        if ($page = $this->getPage()) {
             return $page->Link($segment);
         }
         return Controller::curr()->Link($segment);
@@ -51,5 +39,12 @@ class Section_Controller extends Controller
      public function getSection()
      {
          return $this->section;
+     }
+
+     public function getPage(){
+         if($page = Director::get_current_page()){
+             return $page;
+         }
+         return false;
      }
 }

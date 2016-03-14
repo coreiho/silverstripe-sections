@@ -300,6 +300,7 @@ class Section extends DataObject implements PermissionProvider
         if ($this->controller) {
             return $this->controller;
         }
+
         foreach (array_reverse(ClassInfo::ancestry($this->class)) as $sectionClass) {
             $controllerClass = "{$sectionClass}_Controller";
             if (class_exists($controllerClass)) {
@@ -310,7 +311,9 @@ class Section extends DataObject implements PermissionProvider
             throw new Exception("Could not find controller class for $this->classname");
         }
 
-        $this->controller = Injector::inst()->create($controllerClass, $this);
+        // TODO: Should be a nicer way of setting the section to the controller
+        $this->controller = Injector::inst()->create($controllerClass);
+        $this->controller->section = $this;
 
         return $this->controller;
     }
